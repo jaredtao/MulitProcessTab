@@ -28,7 +28,8 @@ Item {
         }
         ListView {
             id: tabListView
-            height: parent.height
+            height: parent.height - 5
+            y: 5
             anchors.left: mainPageBtn.right
             anchors.right: toolBtnRow.left
             model: tabMgr.tabList
@@ -43,7 +44,6 @@ Item {
                     tabMgr.activeTab(modelData)
                 }
             }
-            
         }
         Row {
             id: toolBtnRow

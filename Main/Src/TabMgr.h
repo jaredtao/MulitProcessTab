@@ -47,6 +47,7 @@ private slots:
     void onReadyReay();
 private:
     void processMessage(const QJsonObject &obj);
+    void raiseSubProcess(const QString &subProcessName);
 private:
     std::unordered_map<QString, QProcess*> m_processMap;
     std::vector<QLocalSocket *> m_socketList;

@@ -8,6 +8,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QApplication>
+#include <iostream>
 TabMgr::TabMgr(QObject *parent) : QObject(parent)
 {
     m_view.setResizeMode(QQuickView::SizeViewToRootObject);
@@ -50,7 +51,7 @@ void TabMgr::activeTab(const QString &name)
         pro->setObjectName(name);
         connectProcess(pro);
         auto env = QProcessEnvironment::systemEnvironment();
-        qWarning() << env.toStringList();
+//        qWarning() << env.toStringList();
         pro->setProcessEnvironment(env);
 
         pro->setWorkingDirectory(qApp->applicationDirPath());
@@ -93,6 +94,15 @@ void TabMgr::setCurrentTab(const QString &currentTab)
     {
         return;
     }
+    if (currentTab == "main")
+    {
+        m_view.raise();
+    }
+    else
+    {
+        raiseSubProcess(currentTab);
+    }
+
     m_currentTab = currentTab;
 
 
@@ -111,6 +121,12 @@ void TabMgr::connectProcess(QProcess *pro)
         m_processMap.erase(name);
         m_tabList.removeOne(name);
         emit tabListChanged();
+    });
+    connect(pro, &QProcess::readyReadStandardOutput, this, [&, pro](){
+       qWarning() << pro->objectName() << pro->readAllStandardOutput();
+    });
+    connect(pro, &QProcess::readyReadStandardError, this, [&, pro](){
+       qWarning() << pro->objectName() << pro->readAllStandardError();
     });
 }
 
@@ -137,11 +153,41 @@ void TabMgr::onReadyReay()
            qWarning() << "parseError " << error.errorString();
            return;
        }
-       processMessage(doc.object());
+       QJsonObject obj = doc.object();
+       if (obj.contains("processName"))
+       {
+           qWarning() << "received " << obj["processName"].toString();
+            socket->setObjectName(obj["processName"].toString());
+
+            auto hw = ::SetParent((HWND)obj["winid"].toInt(), (HWND)m_view.winId());
+            if (hw == NULL)
+            {
+                auto d = ::GetLastError();
+                std::cout << d <<std::endl;
+            }
+            ::MoveWindow((HWND)obj["winid"].toInt(), 0, 40, 1200, 760, false);
+       }
     }
 }
 
 void TabMgr::processMessage(const QJsonObject &obj)
 {
 
+}
+
+void TabMgr::raiseSubProcess(const QString &subProcessName)
+{
+    QJsonObject obj {
+        {"operator", "raise"}
+    };
+    for (auto it : m_socketList)
+    {
+        qWarning() << it->objectName();
+        if (it->objectName() == subProcessName)
+        {
+            qWarning() << "send";
+            it->write(QJsonDocument(obj).toJson());
+            break;
+        }
+    }
 }
