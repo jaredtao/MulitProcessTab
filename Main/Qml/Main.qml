@@ -7,6 +7,7 @@ Item {
     height: 800
     Rectangle {
         id: titleRect
+        objectName: "titleRect"
         width: parent.width
         height: 40
         color: "blue"

@@ -19,27 +19,18 @@ TabMgr::TabMgr(QObject *parent) : QObject(parent)
 
     QObject::connect(m_view.engine(), &QQmlEngine::quit, qApp, &QApplication::quit);
     m_view.show();
-
-    m_server.listen(QUuid::createUuid().toString());
-    connect(&m_server, &QLocalServer::newConnection, this, &TabMgr::onNewConnection);
+    m_ipc.Init();
+    connect(&m_ipc, &IPC::readyRead, this, &TabMgr::onReadyReay);
 }
 
 TabMgr::~TabMgr()
 {
-    for (auto it : m_processMap)
-    {
-        if (it.second->state() != QProcess::NotRunning)
-        {
-            it.second->kill();
-        }
-        it.second->deleteLater();
-    }
     m_processMap.clear();
 }
 
 void TabMgr::activeTab(const QString &name)
 {
-    if (name == QStringLiteral("main"))
+    if (name == s_mainStr)
     {
         setCurrentTab(name);
         return;
@@ -47,31 +38,12 @@ void TabMgr::activeTab(const QString &name)
     auto it = m_processMap.find(name);
     if (it == m_processMap.end())
     {
-        auto pro = new QProcess();
-        pro->setObjectName(name);
-        connectProcess(pro);
-        auto env = QProcessEnvironment::systemEnvironment();
-//        qWarning() << env.toStringList();
-        pro->setProcessEnvironment(env);
-
-        pro->setWorkingDirectory(qApp->applicationDirPath());
+        //找不到则创建进程
         QStringList args;
-        args << m_server.serverName() << name;
-        {
-            QQuickItem *contentRect = m_view.rootObject()->findChild<QQuickItem *>("contentRect");
-            QPointF pos = m_view.mapToGlobal(contentRect->position().toPoint());
-            QJsonObject obj
-            {
-                {"x", pos.x()},
-                {"y", pos.y()},
-                {"w", contentRect->width()},
-                {"h", contentRect->height()}
-            };
-            args << QString(QJsonDocument(obj).toJson());
-        }
+        args << m_ipc.GetServerName() << name;
+        m_processMgr.createProcess(qApp->applicationDirPath() + "/Sub.exe", args);
 
-        pro->start(qApp->applicationDirPath() + "/Sub.exe", args);
-        m_processMap.insert({name, pro});
+		m_processMap.insert({ name,0 });
         m_tabList.append(name);
         emit tabListChanged();
     }
@@ -94,100 +66,76 @@ void TabMgr::setCurrentTab(const QString &currentTab)
     {
         return;
     }
-    if (currentTab == "main")
-    {
-        m_view.raise();
-    }
-    else
+    //新的页面不是main则raise，否则不处理
+    if (currentTab != s_mainStr)
     {
         raiseSubProcess(currentTab);
     }
+    //旧的页面不是main则lower，否则不处理
+    if (m_currentTab != s_mainStr)
+    {
+        lowerSubProcess(m_currentTab);
+    }
 
     m_currentTab = currentTab;
-
-
     emit currentTabChanged();
 }
 
-void TabMgr::connectProcess(QProcess *pro)
+void TabMgr::onReadyReay(const QString &socketName, const QByteArray &data)
 {
-    connect(pro, &QProcess::errorOccurred, this, [&](QProcess::ProcessError error){
-        qWarning() << "process [" << pro->objectName() << "] errorOccurred:" << error;
-    });
-    connect(pro, QOverload<int>::of(&QProcess::finished), this, [&](int exitCode){
-        auto name = pro->objectName();
-        qWarning() << "process [" << pro->objectName() << "] finished with exitCode" << exitCode;
-        delete m_processMap.at(name);
-        m_processMap.erase(name);
-        m_tabList.removeOne(name);
-        emit tabListChanged();
-    });
-    connect(pro, &QProcess::readyReadStandardOutput, this, [&, pro](){
-       qWarning() << pro->objectName() << pro->readAllStandardOutput();
-    });
-    connect(pro, &QProcess::readyReadStandardError, this, [&, pro](){
-       qWarning() << pro->objectName() << pro->readAllStandardError();
-    });
-}
-
-void TabMgr::onNewConnection()
-{
-    while(m_server.hasPendingConnections())
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+    if (doc.isNull())
     {
-        QLocalSocket * socket = m_server.nextPendingConnection();
-        connect(socket, &QLocalSocket::readyRead, this, &TabMgr::onReadyReay);
-        m_socketList.push_back(socket);
+        qWarning() << "parseError " << error.errorString();
+        return;
     }
-}
-
-void TabMgr::onReadyReay()
-{
-    QLocalSocket *socket = static_cast<QLocalSocket *>(sender());
-    if (socket)
+    QJsonObject obj = doc.object();
+    for (auto key : obj.keys())
     {
-       auto data = socket->readAll();
-       QJsonParseError error;
-       QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-       if (doc.isNull())
-       {
-           qWarning() << "parseError " << error.errorString();
-           return;
-       }
-       QJsonObject obj = doc.object();
-       if (obj.contains("processName"))
-       {
-           qWarning() << "received " << obj["processName"].toString();
-            socket->setObjectName(obj["processName"].toString());
-
-            auto hw = ::SetParent((HWND)obj["winid"].toInt(), (HWND)m_view.winId());
-            if (hw == NULL)
+        if (key == QStringLiteral("winid"))
+        {
+			const QString windIdStr = obj[key].toString();
+			uint winid = windIdStr.toInt();
+			QString nameCpy = socketName;
+			m_processMap[socketName] = winid;
+            auto hw = ::SetParent(reinterpret_cast<HWND>(winid), reinterpret_cast<HWND>(m_view.winId()));
+            if (nullptr == hw)
             {
                 auto d = ::GetLastError();
                 std::cout << d <<std::endl;
             }
-            ::MoveWindow((HWND)obj["winid"].toInt(), 0, 40, 1200, 760, false);
-       }
+            QQuickItem *contentItem = m_view.rootObject()->findChild<QQuickItem*>("contentRect");
+            Q_ASSERT(contentItem);
+            QQuickItem *titleItem = m_view.rootObject()->findChild<QQuickItem*>("titleRect");
+            Q_ASSERT(titleItem);
+
+            ::MoveWindow((HWND)(winid), 0, titleItem->height(), contentItem->width(), contentItem->height(), false);
+        }
     }
 }
 
-void TabMgr::processMessage(const QJsonObject &obj)
-{
-
-}
 
 void TabMgr::raiseSubProcess(const QString &subProcessName)
 {
-    QJsonObject obj {
-        {"operator", "raise"}
-    };
-    for (auto it : m_socketList)
+    auto itor = m_processMap.find(subProcessName);
+    if (itor != m_processMap.end())
     {
-        qWarning() << it->objectName();
-        if (it->objectName() == subProcessName)
-        {
-            qWarning() << "send";
-            it->write(QJsonDocument(obj).toJson());
-            break;
-        }
+		HWND hwnd = (HWND)(itor->second);
+        bool ret = ::ShowWindow(hwnd, SW_SHOW);
+    }
+}
+
+void TabMgr::lowerSubProcess(const QString &subProcessName)
+{
+    auto itor = m_processMap.find(subProcessName);
+    if (itor != m_processMap.end())
+    {
+		HWND hwnd = (HWND)(itor->second);
+		bool ret = ::ShowWindow(hwnd, SW_HIDE);
+		if (!ret)
+		{
+			std::cout << ::GetLastError() << std::endl;
+		}
     }
 }

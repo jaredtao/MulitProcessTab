@@ -1,23 +1,15 @@
 ﻿#pragma once
 
 #include <QObject>
-#include <QProcess>
-#include <QLocalServer>
-#include <QLocalSocket>
 #include <unordered_map>
-#include <vector>
+#include <map>
 #include <QQuickView>
 
-namespace std {
-template<>
-struct hash<QString>
-{
-    std::size_t operator ()(const QString &str) const noexcept
-    {
-        return qHash(str);
-    }
-};
-}
+#include "Common.h"
+#include "IPC.h"
+#include "ProcessMgr.h"
+
+const static QString s_mainStr = QStringLiteral("main");
 class TabMgr : public QObject
 {
     Q_OBJECT
@@ -42,18 +34,20 @@ public slots:
 
     void setCurrentTab(const QString &currentTab);
 private slots:
-    void connectProcess(QProcess *pro);
-    void onNewConnection();
-    void onReadyReay();
+
+    void onReadyReay(const QString &socketName, const QByteArray &data);
 private:
-    void processMessage(const QJsonObject &obj);
     void raiseSubProcess(const QString &subProcessName);
+    void lowerSubProcess(const QString &subProcessName);
 private:
-    std::unordered_map<QString, QProcess*> m_processMap;
-    std::vector<QLocalSocket *> m_socketList;
+
     QStringList m_tabList;
-    QString m_currentTab = QStringLiteral("main");
-    QLocalServer m_server;
+    QString m_currentTab = s_mainStr;
     QQuickView m_view;
+    ProcessMgr m_processMgr;
+    IPC m_ipc;
+
+    //<processName, winid>
+    std::unordered_map<QString, uint> m_processMap;
 };
 
