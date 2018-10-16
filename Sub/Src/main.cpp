@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
     //启动时发送 {"processName": "$processName"}, 自报名称给服务器。服务器用来做索引。
     QJsonObject processNameObj {
         {"processName", QString(processName)},
-
     };
     socket.write(QJsonDocument(processNameObj).toJson());
 
@@ -41,7 +40,18 @@ int main(int argc, char *argv[])
     };
 	std::cout << "send winid" << (int)view.winId() << std::endl;
     socket.write(QJsonDocument(winIdObj).toJson());
-
+    QObject::connect(&socket, &QLocalSocket::readyRead, [&](){
+        QJsonDocument doc = QJsonDocument::fromJson(socket.readAll());
+        QJsonObject obj = doc.object();
+        for (auto key : obj.keys())
+        {
+            if (key == QStringLiteral("operator") && obj[key].toString() == QStringLiteral("quit"))
+            {
+                std::cout << "quit" << std::endl;
+                app.quit();
+            }
+        }
+    });
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setFlags(Qt::FramelessWindowHint);
     view.setSource(QUrl("qrc:/Qml/Main.qml"));

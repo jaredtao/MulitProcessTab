@@ -19,6 +19,7 @@ public:
     explicit TabMgr(QObject *parent = nullptr);
     ~TabMgr();
     Q_INVOKABLE void activeTab(const QString &name);
+    Q_INVOKABLE void closeTab(const QString &name);
 
     const QStringList &tabList() const;
 

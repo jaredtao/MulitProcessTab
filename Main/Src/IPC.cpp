@@ -75,4 +75,5 @@ void IPC::onDisconnected()
     QLocalSocket *socket = qobject_cast<QLocalSocket *>(sender());
     Q_ASSERT(socket);
     qInfo() << "socket disconnected";
+    m_socketMap.erase(socket->objectName());
 }

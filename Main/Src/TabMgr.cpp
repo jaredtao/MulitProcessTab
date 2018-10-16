@@ -43,11 +43,29 @@ void TabMgr::activeTab(const QString &name)
         args << m_ipc.GetServerName() << name;
         m_processMgr.createProcess(qApp->applicationDirPath() + "/Sub.exe", args);
 
-		m_processMap.insert({ name,0 });
+        m_processMap[name] = 0;
         m_tabList.append(name);
         emit tabListChanged();
     }
     setCurrentTab(name);
+}
+
+void TabMgr::closeTab(const QString &name) {
+    if (name == s_mainStr)
+    {
+        return;
+    }
+    if (name  == currentTab())
+    {
+        setCurrentTab(s_mainStr);
+    }
+    m_tabList.removeOne(name);
+    emit tabListChanged();
+    m_processMap.erase(name);
+    QJsonObject obj{
+        {"operator", "quit"}
+    };
+    m_ipc.sendData(name, QJsonDocument(obj).toJson());
 }
 
 const QStringList &TabMgr::tabList() const
@@ -95,9 +113,7 @@ void TabMgr::onReadyReay(const QString &socketName, const QByteArray &data)
     {
         if (key == QStringLiteral("winid"))
         {
-			const QString windIdStr = obj[key].toString();
-			uint winid = windIdStr.toInt();
-			QString nameCpy = socketName;
+            uint winid = obj[key].toString().toInt();
 			m_processMap[socketName] = winid;
             auto hw = ::SetParent(reinterpret_cast<HWND>(winid), reinterpret_cast<HWND>(m_view.winId()));
             if (nullptr == hw)

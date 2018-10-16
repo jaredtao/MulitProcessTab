@@ -35,6 +35,7 @@ Item {
             anchors.right: toolBtnRow.left
             model: tabMgr.tabList
             orientation: Qt.Horizontal
+            interactive: false;
             delegate: CButton {
                 height: tabListView.height
                 width: tabListView.count > 4 ? tabListView.width / tabListView.count : 150
@@ -43,6 +44,17 @@ Item {
                 text: modelData
                 onClicked: {
                     tabMgr.activeTab(modelData)
+                }
+                CButton {
+                    width: 8
+                    height: 8
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    text: "X"
+                    color: pressed ? "red" : "gray"
+                    onClicked: {
+                        tabMgr.closeTab(modelData)
+                    }
                 }
             }
         }
