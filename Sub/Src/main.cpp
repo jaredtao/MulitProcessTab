@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
     socket.write(QJsonDocument(winIdObj).toJson());
     QObject::connect(&socket, &QLocalSocket::readyRead, [&](){
         QJsonDocument doc = QJsonDocument::fromJson(socket.readAll());
+        qWarning() << "received " << doc.toJson();
         QJsonObject obj = doc.object();
         for (auto key : obj.keys())
         {

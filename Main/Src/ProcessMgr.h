@@ -20,6 +20,5 @@ private slots:
     void onReadyReadStandardError();
 private:
     void connectProcess(QProcess *process);
-private:
-    std::vector<QProcess *> m_processList;
+
 };

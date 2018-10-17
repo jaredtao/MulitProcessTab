@@ -9,6 +9,8 @@
 #include <QJsonObject>
 #include <QApplication>
 #include <iostream>
+#include <string>
+#include <QThread>
 TabMgr::TabMgr(QObject *parent) : QObject(parent)
 {
     m_view.setResizeMode(QQuickView::SizeViewToRootObject);
@@ -25,7 +27,10 @@ TabMgr::TabMgr(QObject *parent) : QObject(parent)
 
 TabMgr::~TabMgr()
 {
-    m_processMap.clear();
+    for (auto name : m_tabList)
+    {
+        closeTab(name);
+    }
 }
 
 void TabMgr::activeTab(const QString &name)
@@ -114,7 +119,8 @@ void TabMgr::onReadyReay(const QString &socketName, const QByteArray &data)
         if (key == QStringLiteral("winid"))
         {
             uint winid = obj[key].toString().toInt();
-			m_processMap[socketName] = winid;
+            qWarning() << "received winid" << winid;
+            m_processMap[socketName] = winid;
             auto hw = ::SetParent(reinterpret_cast<HWND>(winid), reinterpret_cast<HWND>(m_view.winId()));
             if (nullptr == hw)
             {
@@ -131,14 +137,39 @@ void TabMgr::onReadyReay(const QString &socketName, const QByteArray &data)
     }
 }
 
+std::string GetLastErrorAsString()
+{
+    //Get the error message, if any.
+    DWORD errorMessageID = ::GetLastError();
+    if(errorMessageID == 0)
+        return std::string("errorMessageID is 0"); //No error message has been recorded
 
+    LPSTR messageBuffer = nullptr;
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+    std::string message(messageBuffer, size);
+
+    //Free the buffer.
+    LocalFree(messageBuffer);
+
+    return message;
+}
 void TabMgr::raiseSubProcess(const QString &subProcessName)
 {
     auto itor = m_processMap.find(subProcessName);
     if (itor != m_processMap.end())
     {
-		HWND hwnd = (HWND)(itor->second);
+        HWND hwnd = (HWND)(itor->second);
         bool ret = ::ShowWindow(hwnd, SW_SHOW);
+        if (ret)
+        {
+            qWarning() << "raise succeed" << itor->second;
+        }
+        else
+        {
+            std::cout << " raise failed: " << itor->second << " " << GetLastErrorAsString() << std::endl;
+        }
     }
 }
 
@@ -147,11 +178,15 @@ void TabMgr::lowerSubProcess(const QString &subProcessName)
     auto itor = m_processMap.find(subProcessName);
     if (itor != m_processMap.end())
     {
-		HWND hwnd = (HWND)(itor->second);
-		bool ret = ::ShowWindow(hwnd, SW_HIDE);
-		if (!ret)
-		{
-			std::cout << ::GetLastError() << std::endl;
-		}
+        HWND hwnd = (HWND)(itor->second);
+        bool ret = ::ShowWindow(hwnd, SW_HIDE);
+        if (!ret)
+        {
+            std::cout << " lower failed: " << itor->second << " " << GetLastErrorAsString() << std::endl;
+        }
+        else
+        {
+            qWarning() << "lower succeed" << itor->second;
+        }
     }
 }

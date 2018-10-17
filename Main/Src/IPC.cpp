@@ -9,8 +9,8 @@ IPC::IPC(QObject *parent) : QObject(parent)
 
 IPC::~IPC()
 {
-    m_socketMap.clear();
     m_server.close();
+    m_socketMap.clear();
 }
 
 void IPC::Init()
@@ -75,5 +75,10 @@ void IPC::onDisconnected()
     QLocalSocket *socket = qobject_cast<QLocalSocket *>(sender());
     Q_ASSERT(socket);
     qInfo() << "socket disconnected";
-    m_socketMap.erase(socket->objectName());
+    auto itor = m_socketMap.find(socket->objectName());
+    if (itor != m_socketMap.end())
+    {
+        m_socketMap.erase(itor);
+    }
+//    socket->deleteLater();
 }

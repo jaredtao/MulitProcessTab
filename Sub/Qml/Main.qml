@@ -1,5 +1,5 @@
 ﻿import QtQuick 2.0
 
 Rectangle {
-    color: "red"
+    color: Qt.rgba(Math.random(),Math.random(),Math.random(),Math.random())
 }

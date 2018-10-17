@@ -1,30 +1,22 @@
 ﻿#include "ProcessMgr.h"
 #include <QCoreApplication>
 #include <QDebug>
-#include <algorithm>
+
 ProcessMgr::ProcessMgr(QObject *parent) : QObject(parent) {}
 
 ProcessMgr::~ProcessMgr()
 {
-    for (auto pro : m_processList)
-    {
-        if (pro->state() != QProcess::NotRunning)
-        {
-            pro->kill();
-        }
-		pro->deleteLater();
-    }
-    m_processList.clear();
 }
 
 void ProcessMgr::createProcess(const QString &program, const QStringList &arguments)
 {
-    QProcess *pro = new QProcess;
+    //创建新的QProcess，注意设置parent为this（可以让指针自动释放；可以在当前进程结束时，让子进程自动关闭）。
+    QProcess *pro = new QProcess(this);
     pro->setProcessEnvironment(QProcessEnvironment::systemEnvironment());
     pro->setWorkingDirectory(qApp->applicationDirPath());
     connectProcess(pro);
     pro->start(program, arguments);
-    m_processList.push_back(pro);
+    pro->waitForStarted();
 }
 
 void ProcessMgr::connectProcess(QProcess *process)
@@ -40,7 +32,7 @@ void ProcessMgr::onFinished(int exitCode)
     QProcess *pro = qobject_cast<QProcess *>(sender());
     Q_ASSERT(pro);
     qInfo() << pro->program() << pro->processId() << " finished with exitcode " << exitCode;
-    m_processList.erase(std::find(m_processList.begin(), m_processList.end(), pro));
+    pro->deleteLater();
 }
 
 void ProcessMgr::onErrorOccurred(QProcess::ProcessError error)
