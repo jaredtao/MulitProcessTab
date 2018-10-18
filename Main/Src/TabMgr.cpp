@@ -21,13 +21,13 @@ std::string GetLastErrorAsString()
 
     LPSTR messageBuffer = nullptr;
     size_t size = ::FormatMessageA(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        errorMessageID,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&messageBuffer,
-        0,
-        NULL);
+                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,
+                errorMessageID,
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (LPSTR)&messageBuffer,
+                0,
+                NULL);
 
     std::string message(messageBuffer, size);
 
@@ -39,13 +39,15 @@ std::string GetLastErrorAsString()
 
 TabMgr::TabMgr(QObject *parent) : QObject(parent)
 {
-    m_view.setResizeMode(QQuickView::SizeViewToRootObject);
+    m_view.resize(1200, 800);
+    m_view.setResizeMode(QQuickView::SizeRootObjectToView);
     m_view.setFlags(Qt::FramelessWindowHint | Qt::Dialog);
     m_view.rootContext()->setContextProperty("rootView", &m_view);
     m_view.rootContext()->setContextProperty("tabMgr", this);
     m_view.setSource(QUrl("qrc:/Qml/Main.qml"));
-
-    QObject::connect(m_view.engine(), &QQmlEngine::quit, qApp, &QApplication::quit);
+    connect(&m_view, &QQuickView::widthChanged, this, &TabMgr::syncSize);
+    connect(&m_view, &QQuickView::heightChanged, this, &TabMgr::syncSize);
+    connect(m_view.engine(), &QQmlEngine::quit, qApp, &QApplication::quit);
     m_view.show();
     m_ipc.Init();
     connect(&m_ipc, &IPC::readyRead, this, &TabMgr::onReadyReay);
@@ -120,6 +122,21 @@ const QString &TabMgr::currentTab() const
     return m_currentTab;
 }
 
+void TabMgr::showMaximized()
+{
+    m_view.showMaximized();
+}
+
+void TabMgr::showMinimized()
+{
+    m_view.showMinimized();
+}
+
+void TabMgr::showNormal()
+{
+    m_view.showNormal();
+}
+
 void TabMgr::setCurrentTab(const QString &currentTab)
 {
     if (m_currentTab == currentTab)
@@ -131,7 +148,6 @@ void TabMgr::setCurrentTab(const QString &currentTab)
     {
         raiseSubProcess(currentTab);
     }
-    QThread::msleep(3);
     //旧的页面不是main则lower，否则不处理
     if (m_currentTab != s_mainStr)
     {
@@ -170,6 +186,25 @@ void TabMgr::onReadyReay(const QString &socketName, const QByteArray &data)
             Q_ASSERT(titleItem);
             ::MoveWindow(reinterpret_cast<HWND>(winid), 0, titleItem->height(), contentItem->width(), contentItem->height(), true);
         }
+    }
+}
+
+void TabMgr::syncSize()
+{
+    QQuickItem *contentItem = m_view.rootObject()->findChild<QQuickItem *>("contentRect");
+    Q_ASSERT(contentItem);
+    QQuickItem *titleItem = m_view.rootObject()->findChild<QQuickItem *>("titleRect");
+    Q_ASSERT(titleItem);
+    QJsonObject obj{
+        { "operator", "resize" },
+        { "x", 0},
+        { "y", titleItem->height()},
+        { "w", contentItem->width()},
+        { "h", contentItem->height()},
+    };
+    QByteArray json = QJsonDocument(obj).toJson();
+    for (auto tab : m_tabList) {
+        m_ipc.sendData(tab, json);
     }
 }
 

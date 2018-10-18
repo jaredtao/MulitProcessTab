@@ -25,6 +25,10 @@ public:
 
     const QString &currentTab() const;
 
+    Q_INVOKABLE void showMaximized();
+    Q_INVOKABLE void showMinimized();
+    Q_INVOKABLE void showNormal();
+
 signals:
 
     void tabListChanged();
@@ -37,6 +41,7 @@ public slots:
 private slots:
 
     void onReadyReay(const QString &socketName, const QByteArray &data);
+    void syncSize();
 private:
     void raiseSubProcess(const QString &subProcessName);
     void lowerSubProcess(const QString &subProcessName);

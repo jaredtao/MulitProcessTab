@@ -3,8 +3,7 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import "./Comp"
 Item {
-    width: 1200
-    height: 800
+    id: root
     Rectangle {
         id: titleRect
         objectName: "titleRect"
@@ -29,8 +28,7 @@ Item {
         }
         ListView {
             id: tabListView
-            height: parent.height - 5
-            y: 5
+            height: parent.height
             anchors.left: mainPageBtn.right
             anchors.right: toolBtnRow.left
             model: tabMgr.tabList
@@ -63,9 +61,25 @@ Item {
             anchors.right: parent.right
             CButton {
                 text: "一"
+                onClicked: {
+                    tabMgr.showMinimized()
+                }
             }
             CButton {
                 text: "口"
+                property bool isMaxed: false
+                onClicked: {
+                    if (isMaxed)
+                    {
+                        tabMgr.showNormal();
+                    }
+                    else
+                    {
+                        tabMgr.showMaximized();
+                    }
+
+                    isMaxed = ! isMaxed;
+                }
             }
             CButton {
                 text: "X"

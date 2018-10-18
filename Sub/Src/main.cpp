@@ -60,12 +60,23 @@ int main(int argc, char *argv[])
                 else if (obj[key].toString() == QStringLiteral("show"))
                 {
                     std::cout << "show" << std::endl;
+                    view.raise();
                     view.show();
                 }
                 else if (obj[key].toString() == QStringLiteral("hide"))
                 {
                     std::cout << "hide" << std::endl;
+                    view.lower();
                     view.hide();
+                }
+                else if (obj[key].toString() == QStringLiteral("resize"))
+                {
+                    int x = obj["x"].toInt();
+                    int y = obj["y"].toInt();
+                    int w = obj["w"].toInt();
+                    int h = obj["h"].toInt();
+                    view.setGeometry(x, y, w, h);
+                    std::cout << "resize " << x << " " << y << " " << w << " " << h << std::endl;
                 }
             }
         }
