@@ -1,25 +1,32 @@
 ﻿#include <QApplication>
-#include <QQuickView>
-#include <QQmlContext>
-#include <QQmlEngine>
-#include <QLocalSocket>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLocalSocket>
+#include <QQmlContext>
+#include <QQmlEngine>
+#include <QQuickView>
 #include <iostream>
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
-        std::cout << "Usage: " << argv[0] << " serverSocketName processName" << std::endl;
+        std::cout << "Usage: " << argv[0] << " serverSocketName processName geometry" << std::endl;
         return -1;
     }
     QString serverSocketName = argv[1];
     QString processName = argv[2];
+    QString geometryStr = argv[3];
+    QJsonDocument geometrydoc = QJsonDocument::fromJson(geometryStr.toUtf8());
+    QJsonObject geometryObj = geometrydoc.object();
+    int x = geometryObj["x"].toInt();
+    int y = geometryObj["y"].toInt();
+    int w = geometryObj["w"].toInt();
+    int h = geometryObj["h"].toInt();
 
     std::cout << argv[1] << "started" << std::endl;
     QApplication app(argc, argv);
     QQuickView view;
-
+    view.setGeometry(x, y, w, h);
     QLocalSocket socket;
     socket.connectToServer(serverSocketName);
     if (!socket.waitForConnected())
@@ -29,27 +36,37 @@ int main(int argc, char *argv[])
     }
 
     //启动时发送 {"processName": "$processName"}, 自报名称给服务器。服务器用来做索引。
-    QJsonObject processNameObj {
-        {"processName", QString(processName)},
+    QJsonObject processNameObj{
+        { "processName", QString(processName) },
     };
     socket.write(QJsonDocument(processNameObj).toJson());
 
     //发送句柄给服务器，之后view的坐标、宽高及隐藏显示 都由server进程控制
-    QJsonObject winIdObj {
-        {"winid", QString::number((int)view.winId())}
-    };
-	std::cout << "send winid" << (int)view.winId() << std::endl;
+    QJsonObject winIdObj{ { "winid", QString::number((quint64)view.winId()) } };
+    std::cout << "send winid" << (quint64)view.winId() << std::endl;
     socket.write(QJsonDocument(winIdObj).toJson());
-    QObject::connect(&socket, &QLocalSocket::readyRead, [&](){
+    QObject::connect(&socket, &QLocalSocket::readyRead, [&]() {
         QJsonDocument doc = QJsonDocument::fromJson(socket.readAll());
-        qWarning() << "received " << doc.toJson();
         QJsonObject obj = doc.object();
         for (auto key : obj.keys())
         {
-            if (key == QStringLiteral("operator") && obj[key].toString() == QStringLiteral("quit"))
+            if (key == QStringLiteral("operator"))
             {
-                std::cout << "quit" << std::endl;
-                app.quit();
+                if (obj[key].toString() == QStringLiteral("quit"))
+                {
+                    std::cout << "quit" << std::endl;
+                    app.quit();
+                }
+                else if (obj[key].toString() == QStringLiteral("show"))
+                {
+                    std::cout << "show" << std::endl;
+                    view.show();
+                }
+                else if (obj[key].toString() == QStringLiteral("hide"))
+                {
+                    std::cout << "hide" << std::endl;
+                    view.hide();
+                }
             }
         }
     });

@@ -4,9 +4,7 @@
 
 ProcessMgr::ProcessMgr(QObject *parent) : QObject(parent) {}
 
-ProcessMgr::~ProcessMgr()
-{
-}
+ProcessMgr::~ProcessMgr() {}
 
 void ProcessMgr::createProcess(const QString &program, const QStringList &arguments)
 {

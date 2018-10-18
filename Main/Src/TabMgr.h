@@ -49,6 +49,6 @@ private:
     IPC m_ipc;
 
     //<processName, winid>
-    std::unordered_map<QString, uint> m_processMap;
+    std::unordered_map<QString, quint64> m_processMap;
 };
 
