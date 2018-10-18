@@ -22,13 +22,12 @@ std::string GetLastErrorAsString()
     LPSTR messageBuffer = nullptr;
     size_t size = ::FormatMessageA(
                 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                NULL,
+                nullptr,
                 errorMessageID,
                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                (LPSTR)&messageBuffer,
+                (LPSTR)(&messageBuffer),
                 0,
-                NULL);
-
+                nullptr);
     std::string message(messageBuffer, size);
 
     // Free the buffer.
@@ -184,7 +183,12 @@ void TabMgr::onReadyReay(const QString &socketName, const QByteArray &data)
             Q_ASSERT(contentItem);
             QQuickItem *titleItem = m_view.rootObject()->findChild<QQuickItem *>("titleRect");
             Q_ASSERT(titleItem);
-            ::MoveWindow(reinterpret_cast<HWND>(winid), 0, titleItem->height(), contentItem->width(), contentItem->height(), true);
+            ::MoveWindow(reinterpret_cast<HWND>(winid),
+                         0,
+                         static_cast<int>(titleItem->height()),
+                         static_cast<int>(contentItem->width()),
+                         static_cast<int>(contentItem->height()),
+                         true);
         }
     }
 }

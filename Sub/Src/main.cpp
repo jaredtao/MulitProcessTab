@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
     socket.write(QJsonDocument(processNameObj).toJson());
 
     //发送句柄给服务器，之后view的坐标、宽高及隐藏显示 都由server进程控制
-    QJsonObject winIdObj{ { "winid", QString::number((quint64)view.winId()) } };
-    std::cout << "send winid" << (quint64)view.winId() << std::endl;
+    QJsonObject winIdObj{ { "winid", QString::number(static_cast<quint64>(view.winId())) } };
+    std::cout << "send winid" << static_cast<quint64>(view.winId()) << std::endl;
     socket.write(QJsonDocument(winIdObj).toJson());
     QObject::connect(&socket, &QLocalSocket::readyRead, [&]() {
         QJsonDocument doc = QJsonDocument::fromJson(socket.readAll());
@@ -60,13 +60,11 @@ int main(int argc, char *argv[])
                 else if (obj[key].toString() == QStringLiteral("show"))
                 {
                     std::cout << "show" << std::endl;
-                    view.raise();
                     view.show();
                 }
                 else if (obj[key].toString() == QStringLiteral("hide"))
                 {
                     std::cout << "hide" << std::endl;
-                    view.lower();
                     view.hide();
                 }
                 else if (obj[key].toString() == QStringLiteral("resize"))
