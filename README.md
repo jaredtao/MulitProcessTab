@@ -31,7 +31,7 @@ Tab页
 
 ## 开发环境
 
-* Qt 5.12.x Windows/Ubuntu
+* Qt 5.9.x Windows/Ubuntu
 
 #### 联系方式:
 ***
