@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         }
     });
     view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.setFlags(Qt::FramelessWindowHint);
+    view.setFlags(Qt::FramelessWindowHint | Qt::ForeignWindow);
     view.setSource(QUrl("qrc:/Qml/Main.qml"));
     view.show();
     app.exec();
