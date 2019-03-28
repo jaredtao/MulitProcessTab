@@ -2,12 +2,10 @@
 类似于Chrome浏览器，多进程按照Tab的方式显示
 
 ## Build status
-| [Linux][lin-link] | [Windows][win-link] |
-| :---------------: | :-----------------: |
-| ![lin-badge]      | ![win-badge]        |
+| [Windows][win-link] |
+| :-----------------: |
+| ![win-badge]        |
 
-[lin-badge]: https://travis-ci.org/wentaojia2014/MulitProcessTab.svg?branch=master "Travis build status"
-[lin-link]: https://travis-ci.org/wentaojia2014/MulitProcessTab "Travis build status"
 [win-badge]: https://ci.appveyor.com/api/projects/status/9i0y893u0d9ayud9?svg=true "AppVeyor build status"
 [win-link]: https://ci.appveyor.com/project/jiawentao/mulitprocesstab "AppVeyor build status"
 
