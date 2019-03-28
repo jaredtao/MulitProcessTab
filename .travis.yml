@@ -1,0 +1,40 @@
+dist: xenial
+#指定语言为cpp
+language: cpp
+#需要sudu权限
+sudo: required
+#编译器为gcc
+compiler: gcc
+#环境变量
+env: QT_BASE="512"
+#缓存
+cache:
+    bundler: true
+    apt: true
+    directories:
+        - /opt/qt512/
+# 注意上面的缓存,指定qt安装路径，可以避免重复安装
+
+#组
+group: deprecated-2019Q1
+
+# travis默认系统为ubuntu，并提供一些基础的命令。但是没有安装Qt，需要通过ubuntu源进行安装。
+# 关于ubuntu源 在这个网站上查看细节 https://launchpad.net/~beineri/+archive/ubuntu/
+# 当然也可以通过qt安装包 +一些命令的方式来安装，这里以源的方式为主。
+#安装前的设置
+#添加qt5.12.1的源
+before_install:
+    - sudo add-apt-repository ppa:beineri/opt-qt-5.12.1-xenial -y
+    - sudo apt-get update -qq
+    - sudo apt-get install -y libglew-dev libglfw3-dev
+    - sudo apt-get install -y qt512-meta-minimal
+# 单独安装qt3d模块的示例
+#    - sudo apt-get install -y qt5123d
+
+before_script:
+    - source /opt/qt512/bin/qt512-env.sh
+script:
+    - qmake
+    - make
+notifications:
+    email: false
