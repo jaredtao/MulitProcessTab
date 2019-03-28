@@ -6,13 +6,13 @@
 | :---------------: | :-----------------: |
 | ![lin-badge]      | ![win-badge]        |
 
-[lin-badge]: https://travis-ci.org/wentaojia2014/HelloCI.svg?branch=master "Travis build status"
-[lin-link]: https://travis-ci.org/wentaojia2014/HelloCI "Travis build status"
-[win-badge]: https://ci.appveyor.com/api/projects/status/yykx4xufxtrax1hi?svg=true "AppVeyor build status"
-[win-link]: https://ci.appveyor.com/project/jiawentao/helloci "AppVeyor build status"
+[lin-badge]: https://travis-ci.org/wentaojia2014/MulitProcessTab.svg?branch=master "Travis build status"
+[lin-link]: https://travis-ci.org/wentaojia2014/MulitProcessTab "Travis build status"
+[win-badge]: https://ci.appveyor.com/api/projects/status/9i0y893u0d9ayud9?svg=true "AppVeyor build status"
+[win-link]: https://ci.appveyor.com/project/jiawentao/mulitprocesstab "AppVeyor build status"
 
 ## License
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wentaojia2014/TableEdit/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wentaojia2014/MulitProcessTab/blob/master/LICENSE)
 
 ## 预览图
 
