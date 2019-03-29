@@ -1,6 +1,8 @@
 ﻿# 多进程Demo
+ 
 类似于Chrome浏览器，多进程按照Tab的方式显示
 
+（目前仅在windows平台使用）
 ## Build status
 | [Windows][win-link] |
 | :-----------------: |
@@ -23,7 +25,17 @@ Tab页
 
 ![](DemoImages/sub.png)
 
+## 说明
+
+标题栏和首页，是主进程，每个tab页面，是一个独立的子进程。
+
+子进程窗口通过Windows API  SetParent的方式，附加到主进程。
+
+Tab切换，使用进程间通讯机制，将目标Tab的窗口置顶。
+
 ## 进程间通讯机制
+
+使用Qt的LocalSocket功能。
 
 主进程启动之后，创建一个LoaclServer，使用随机uuid作为server名称。
 
@@ -31,7 +43,7 @@ Tab页
 
 ## 开发环境
 
-* Qt 5.9.x Windows/Ubuntu
+* Qt 5.9.x Windows
 
 #### 联系方式:
 ***
