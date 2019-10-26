@@ -12,7 +12,7 @@
 [win-link]: https://ci.appveyor.com/project/jiawentao/mulitprocesstab "AppVeyor build status"
 
 ## License
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wentaojia2014/MulitProcessTab/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jaredtao/MulitProcessTab/blob/master/LICENSE)
 
 ## 预览图
 
@@ -59,14 +59,14 @@ Tab切换，使用进程间通讯机制，将目标Tab的窗口置顶。
 
 QQ(TIM)、微信二维码
 
-<img src="https://github.com/wentaojia2014/wentaojia2014.github.io/blob/master/img/qq_connect.jpg?raw=true" width="30%" height="30%" /><img src="https://github.com/wentaojia2014/wentaojia2014.github.io/blob/master/img/weixin_connect.jpg?raw=true" width="30%" height="30%" />
+<img src="https://github.com/jiawentao/jiawentao.github.io/blob/master/img/qq_connect.jpg?raw=true" width="30%" height="30%" /><img src="https://github.com/jiawentao/jiawentao.github.io/blob/master/img/weixin_connect.jpg?raw=true" width="30%" height="30%" />
 
 
 ###### 请放心联系我，乐于提供咨询服务，也可洽谈有偿技术支持相关事宜。
 
 ***
 #### **打赏**
-<img src="https://github.com/wentaojia2014/wentaojia2014.github.io/blob/master/img/weixin.jpg?raw=true" width="30%" height="30%" /><img src="https://github.com/wentaojia2014/wentaojia2014.github.io/blob/master/img/zhifubao.jpg?raw=true" width="30%" height="30%" />
+<img src="https://github.com/jiawentao/jiawentao.github.io/blob/master/img/weixin.jpg?raw=true" width="30%" height="30%" /><img src="https://github.com/jiawentao/jiawentao.github.io/blob/master/img/zhifubao.jpg?raw=true" width="30%" height="30%" />
 
 ###### 觉得分享的内容还不错, 就请作者喝杯奶茶吧~~
 ***
